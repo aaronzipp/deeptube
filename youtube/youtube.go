@@ -65,7 +65,7 @@ func FetchVideos(ids []string) (video.Videos, error) {
 	videos := make(video.Videos, len(output))
 
 	for i, item := range output {
-		length, err := video.LengthFromString(item.Snippet.PublishedAt)
+		length, err := video.LengthFromString(item.ContentDetails.Duration)
 		if err != nil {
 			return nil, err
 		}
