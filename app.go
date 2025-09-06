@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/aaronzipp/deeptube/video"
 	"fmt"
+	"github.com/aaronzipp/deeptube/video"
 	"image"
 	"net/http"
 
