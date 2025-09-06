@@ -4,6 +4,8 @@ import (
 	"github.com/aaronzipp/deeptube/video"
 	"image"
 	"net/http"
+	"os/exec"
+	"runtime"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -11,9 +13,9 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"os/exec"
-	"runtime"
 )
+
+const numVideos = 60
 
 func openBrowser(url string) {
 	switch runtime.GOOS {
@@ -37,7 +39,7 @@ func loadImage(url string) *canvas.Image {
 		return canvas.NewImageFromResource(theme.FyneLogo())
 	}
 	image := canvas.NewImageFromImage(img)
-	image.SetMinSize(fyne.NewSize(200, 112))
+	image.SetMinSize(fyne.NewSize(210, 118)) // 16:9 ratio, like YouTube
 	image.FillMode = canvas.ImageFillContain
 	return image
 }
@@ -48,8 +50,9 @@ func main() {
 		panic(err)
 	}
 	videos.Sort()
-
-	videos = videos[:10]
+	if len(videos) > numVideos {
+		videos = videos[:numVideos]
+	}
 
 	a := app.New()
 	w := a.NewWindow("DeepTube")
@@ -58,11 +61,14 @@ func main() {
 
 	for _, vid := range videos {
 		thumbnail := loadImage(vid.Thumbnail)
+
 		title := widget.NewLabelWithStyle(
 			vid.Title,
 			fyne.TextAlignLeading,
 			fyne.TextStyle{Bold: true},
 		)
+		title.Wrapping = fyne.TextWrapWord
+
 		channel := widget.NewLabel(vid.ChannelName)
 		duration := vid.VideoLength.String()
 		if vid.WasLive {
@@ -71,24 +77,29 @@ func main() {
 		durationLabel := widget.NewLabel(duration)
 		published := widget.NewLabel(vid.TimeSincePublished())
 
-		card := container.NewVBox(
-			thumbnail,
-			container.NewVBox(
-				title,
-				channel,
-				durationLabel,
-				published,
-			),
+		infoBox := container.NewVBox(
+			title,
+			channel,
+			container.NewHBox(durationLabel, widget.NewLabel(" • "), published),
 		)
 
-		videoCard := widget.NewCard("", "", container.NewPadded(card))
+		card := container.NewVBox(
+			thumbnail,
+			infoBox,
+		)
+
+		btn := widget.NewButtonWithIcon("", theme.MediaPlayIcon(), func() {
+			openBrowser(vid.YouTubeLink())
+		})
+
+		videoCard := widget.NewCard("", "", container.NewBorder(nil, btn, nil, nil, card))
 		cards = append(cards, videoCard)
 	}
 
-	videosContainer := container.NewGridWithColumns(4, cards...)
+	grid := container.NewGridWithColumns(4, cards...)
+	scroll := container.NewVScroll(grid)
 
-	scroll := container.NewVScroll(videosContainer)
 	w.SetContent(scroll)
-	w.Resize(fyne.NewSize(900, 600))
+	w.SetFullScreen(true)
 	w.ShowAndRun()
 }
