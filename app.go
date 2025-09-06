@@ -1,0 +1,102 @@
+package main
+
+import (
+	"github.com/aaronzipp/deeptube/video"
+	"fmt"
+	"image"
+	"net/http"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
+	"os/exec"
+	"runtime"
+)
+
+const numColumns = 4
+
+func openBrowser(url string) {
+	switch runtime.GOOS {
+	case "windows":
+		exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		exec.Command("open", url).Start()
+	default:
+		exec.Command("xdg-open", url).Start()
+	}
+}
+
+func loadImage(url string) *canvas.Image {
+	resp, err := http.Get(url)
+	if err != nil {
+		return canvas.NewImageFromResource(theme.FyneLogo())
+	}
+	defer resp.Body.Close()
+	img, _, err := image.Decode(resp.Body)
+	if err != nil {
+		return canvas.NewImageFromResource(theme.FyneLogo())
+	}
+	image := canvas.NewImageFromImage(img)
+	image.SetMinSize(fyne.NewSize(200, 112))
+	image.FillMode = canvas.ImageFillContain
+	return image
+}
+
+func main() {
+	videos, err := video.VideosFromDB()
+	if err != nil {
+		panic(err)
+	}
+	videos.Sort()
+
+	videos = videos[:10]
+
+	a := app.New()
+	w := a.NewWindow("DeepTube")
+
+	grid := container.NewGridWithColumns(numColumns)
+
+	for _, vid := range videos {
+		thumbnail := loadImage(vid.Thumbnail)
+		title := widget.NewLabelWithStyle(
+			vid.Title,
+			fyne.TextAlignLeading,
+			fyne.TextStyle{Bold: true},
+		)
+		channel := widget.NewLabel(vid.ChannelName)
+		duration := vid.VideoLength.String()
+		if vid.WasLive {
+			duration += " LIVE"
+		}
+		durationLabel := widget.NewLabel(duration)
+		published := widget.NewLabel(vid.TimeSincePublished())
+
+		card := container.NewVBox(
+			thumbnail,
+			title,
+			channel,
+			durationLabel,
+			published,
+		)
+		fmt.Printf("%s, %s, %s, %s\n",
+			vid.Title,
+			vid.ChannelName,
+			duration,
+			vid.TimeSincePublished(),
+		)
+
+		// btn := widget.NewButton("", func() {
+		// 	openBrowser(vid.YouTubeLink())
+		// })
+		// btn.SetContent(card)
+		grid.Add(card)
+	}
+
+	scroll := container.NewVScroll(grid)
+	w.SetContent(scroll)
+	w.Resize(fyne.NewSize(900, 600))
+	w.ShowAndRun()
+}
