@@ -135,6 +135,7 @@ func VideosFromDB() (Videos, error) {
 				Seconds: int(vid.Seconds.Int64),
 			},
 			PublishedAt: publishedTime,
+			Thumbnail:   vid.Thumbnail.String,
 			WasLive:     vid.WasLive.Int64 == 1,
 		}
 	}

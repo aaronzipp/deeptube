@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/aaronzipp/deeptube/video"
 	"image"
 	"net/http"
@@ -15,8 +14,6 @@ import (
 	"os/exec"
 	"runtime"
 )
-
-const numColumns = 4
 
 func openBrowser(url string) {
 	switch runtime.GOOS {
@@ -57,7 +54,7 @@ func main() {
 	a := app.New()
 	w := a.NewWindow("DeepTube")
 
-	grid := container.NewGridWithColumns(numColumns)
+	var cards []fyne.CanvasObject
 
 	for _, vid := range videos {
 		thumbnail := loadImage(vid.Thumbnail)
@@ -76,26 +73,21 @@ func main() {
 
 		card := container.NewVBox(
 			thumbnail,
-			title,
-			channel,
-			durationLabel,
-			published,
-		)
-		fmt.Printf("%s, %s, %s, %s\n",
-			vid.Title,
-			vid.ChannelName,
-			duration,
-			vid.TimeSincePublished(),
+			container.NewVBox(
+				title,
+				channel,
+				durationLabel,
+				published,
+			),
 		)
 
-		// btn := widget.NewButton("", func() {
-		// 	openBrowser(vid.YouTubeLink())
-		// })
-		// btn.SetContent(card)
-		grid.Add(card)
+		videoCard := widget.NewCard("", "", container.NewPadded(card))
+		cards = append(cards, videoCard)
 	}
 
-	scroll := container.NewVScroll(grid)
+	videosContainer := container.NewGridWithColumns(4, cards...)
+
+	scroll := container.NewVScroll(videosContainer)
 	w.SetContent(scroll)
 	w.Resize(fyne.NewSize(900, 600))
 	w.ShowAndRun()
