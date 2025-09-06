@@ -132,7 +132,7 @@ func VideosFromDB() (Videos, error) {
 }
 
 func (v Videos) Sort() {
-	sort.Slice(v, func (i, j int) bool {
+	sort.Slice(v, func(i, j int) bool {
 		return v[i].PublishedAt.After(v[j].PublishedAt)
 	})
 }
