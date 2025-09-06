@@ -94,6 +94,17 @@ func (v Video) TimeSincePublished() string {
 
 }
 
+func (v Video) String() string {
+	return fmt.Sprintf(
+		" --- Id: %s ---\nTitle: %s\nChannel: %s\nPublished At: %s\nLength: %s",
+		v.VideoId,
+		v.Title,
+		v.ChannelName,
+		v.PublishedAt,
+		v.VideoLength.String(),
+	)
+}
+
 func VideosFromDB() (Videos, error) {
 	ctx := context.Background()
 	db, err := sql.Open("sqlite", "videos.db")
