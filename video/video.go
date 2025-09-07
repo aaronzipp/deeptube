@@ -148,3 +148,41 @@ func (v Videos) Sort() {
 		return v[i].PublishedAt.After(v[j].PublishedAt)
 	})
 }
+
+func (v Videos) WriteToDB() error {
+	ctx := context.Background()
+	db, err := sql.Open("sqlite", "videos.db")
+
+	if err != nil {
+	}
+
+	queries := database.New(db)
+
+	for _, vid := range v {
+		err := queries.AddVideo(ctx, database.AddVideoParams{
+			VideoID:     vid.VideoId,
+			Title:       sql.NullString{String: vid.Title, Valid: true},
+			Thumbnail:   sql.NullString{String: vid.Thumbnail, Valid: true},
+			ChannelName: sql.NullString{String: vid.ChannelName, Valid: true},
+			Description: sql.NullString{String: vid.Description, Valid: true},
+			PublishedAt: sql.NullString{
+				String: vid.PublishedAt.Format("2006-01-02 15:04:05"),
+				Valid:  true,
+			},
+			Hours:   sql.NullInt64{Int64: int64(vid.VideoLength.Hours), Valid: true},
+			Minutes: sql.NullInt64{Int64: int64(vid.VideoLength.Minutes), Valid: true},
+			Seconds: sql.NullInt64{Int64: int64(vid.VideoLength.Seconds), Valid: true},
+			WasLive: sql.NullInt64{Int64: func() int64 {
+				if vid.WasLive {
+					return 1
+				}
+				return 0
+			}(), Valid: true},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
