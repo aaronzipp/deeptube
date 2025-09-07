@@ -24,6 +24,12 @@ type Subscription struct {
 	Shorts          bool     `yaml:"shorts,omitempty"`
 }
 
+type Playlist struct {
+	Playlist   string   `yaml:"playlist"`
+	ID         string   `yaml:"id"`
+	Categories []string `yaml:"categories"`
+}
+
 func YoutubeService() (*youtube.Service, error) {
 	ctx := context.Background()
 	err := godotenv.Load()
@@ -110,7 +116,7 @@ func FetchVideos(ids []string) (video.Videos, error) {
 	return videos, nil
 }
 
-func FetchAllVideos(subscriptions []Subscription) (video.Videos, error) {
+func FetchAllVideos(subscriptions []Subscription, playlists []Playlist) (video.Videos, error) {
 	playlistIds := []string{}
 	for _, subscription := range subscriptions {
 		playlistId := strings.Replace(subscription.ID, "UC", string(video.NormalVideo), 1)
@@ -123,6 +129,9 @@ func FetchAllVideos(subscriptions []Subscription) (video.Videos, error) {
 		if subscription.Shorts {
 			playlistId = strings.Replace(subscription.ID, "UC", string(video.ShortVideo), 1)
 		}
+	}
+	for _, playlist := range playlists {
+		playlistIds = append(playlistIds, playlist.ID)
 	}
 
 	vids := video.Videos{}
@@ -160,4 +169,19 @@ func ParseSubscriptions(filename string) ([]Subscription, error) {
 	}
 
 	return subs, nil
+}
+
+func ParsePlaylists(filename string) ([]Playlist, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	var playlists []Playlist
+	err = yaml.Unmarshal(data, &playlists)
+	if err != nil {
+		return nil, err
+	}
+
+	return playlists, nil
 }
