@@ -116,22 +116,44 @@ func FetchVideos(ids []string) (video.Videos, error) {
 	return videos, nil
 }
 
+func shouldExcludeVideo(title string, excludeKeywords []string) bool {
+	if len(excludeKeywords) == 0 {
+		return false
+	}
+
+	titleLower := strings.ToLower(title)
+	for _, keyword := range excludeKeywords {
+		if strings.Contains(titleLower, strings.ToLower(keyword)) {
+			return true
+		}
+	}
+	return false
+}
+
 func FetchAllVideos(subscriptions []Subscription, playlists []Playlist) (video.Videos, error) {
+	playlistExcludes := make(map[string][]string)
+
 	playlistIds := []string{}
 	for _, subscription := range subscriptions {
 		playlistId := strings.Replace(subscription.ID, "UC", string(video.NormalVideo), 1)
 		playlistIds = append(playlistIds, playlistId)
+		playlistExcludes[playlistId] = subscription.ExcludeKeywords
 
 		if subscription.Live {
 			playlistId = strings.Replace(subscription.ID, "UC", string(video.LiveVideo), 1)
 			playlistIds = append(playlistIds, playlistId)
+			playlistExcludes[playlistId] = subscription.ExcludeKeywords
 		}
 		if subscription.Shorts {
 			playlistId = strings.Replace(subscription.ID, "UC", string(video.ShortVideo), 1)
+			playlistIds = append(playlistIds, playlistId)
+			playlistExcludes[playlistId] = subscription.ExcludeKeywords
 		}
 	}
 	for _, playlist := range playlists {
 		playlistIds = append(playlistIds, playlist.ID)
+		// Playlists don't have exclude_keywords, so they get an empty array
+		playlistExcludes[playlist.ID] = []string{}
 	}
 
 	vids := video.Videos{}
@@ -151,7 +173,16 @@ func FetchAllVideos(subscriptions []Subscription, playlists []Playlist) (video.V
 		if err != nil {
 			return nil, fmt.Errorf("failed fetching videos with ids %+v: %!s", videoIds, err)
 		}
-		vids = append(vids, playlistVids...)
+
+		excludes := playlistExcludes[playlistId]
+		filteredVids := make(video.Videos, 0, len(playlistVids))
+		for _, vid := range playlistVids {
+			if !shouldExcludeVideo(vid.Title, excludes) {
+				filteredVids = append(filteredVids, vid)
+			}
+		}
+
+		vids = append(vids, filteredVids...)
 	}
 	return vids, nil
 }
