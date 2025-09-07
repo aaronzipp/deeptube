@@ -33,3 +33,6 @@ go.work.sum
 
 # sqlite files
 *.db
+
+# personal subscription file
+subscriptions.yaml
