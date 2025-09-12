@@ -1,21 +1,28 @@
 package main
 
 import (
-	"github.com/aaronzipp/deeptube/video"
 	"image"
 	"net/http"
 	"os/exec"
 	"runtime"
+	"time"
+
+	"github.com/aaronzipp/deeptube/video"
+	"github.com/aaronzipp/deeptube/youtube"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
 const numVideos = 60
+const logoPath = "assets/logo.png"
+
+const applicationName = "DeepTube"
 
 func openBrowser(url string) {
 	switch runtime.GOOS {
@@ -31,12 +38,12 @@ func openBrowser(url string) {
 func loadImage(url string) *canvas.Image {
 	resp, err := http.Get(url)
 	if err != nil {
-		return canvas.NewImageFromResource(theme.FyneLogo())
+		return canvas.NewImageFromFile(logoPath)
 	}
 	defer resp.Body.Close()
 	img, _, err := image.Decode(resp.Body)
 	if err != nil {
-		return canvas.NewImageFromResource(theme.FyneLogo())
+		return canvas.NewImageFromFile(logoPath)
 	}
 	image := canvas.NewImageFromImage(img)
 	image.SetMinSize(fyne.NewSize(210, 118)) // 16:9 ratio, like YouTube
@@ -44,7 +51,7 @@ func loadImage(url string) *canvas.Image {
 	return image
 }
 
-func main() {
+func launchGUI(a fyne.App) {
 	videos, err := video.VideosFromDB()
 	if err != nil {
 		panic(err)
@@ -54,8 +61,8 @@ func main() {
 		videos = videos[:numVideos]
 	}
 
-	a := app.New()
-	w := a.NewWindow("DeepTube")
+	w := a.NewWindow(applicationName)
+	w.SetIcon(a.Icon())
 
 	var cards []fyne.CanvasObject
 
@@ -100,6 +107,42 @@ func main() {
 	scroll := container.NewVScroll(grid)
 
 	w.SetContent(scroll)
-	w.SetFullScreen(true)
-	w.ShowAndRun()
+	w.Resize(fyne.NewSize(1200, 800))
+	w.Show()
+}
+
+func main() {
+	a := app.New()
+
+	logo, err := fyne.LoadResourceFromPath(logoPath)
+	if err == nil {
+		a.SetIcon(logo)
+	}
+
+	launchItem := fyne.NewMenuItem("Launch", func() {
+		launchGUI(a)
+	})
+
+	refreshItem := fyne.NewMenuItem("Refresh", func() {
+		err := youtube.RefreshVideos()
+		if err != nil {
+			// TODO: handle this error by showing the user
+		}
+	})
+
+	menu := fyne.NewMenu(applicationName, launchItem, refreshItem)
+
+	if desk, ok := a.(desktop.App); ok {
+		desk.SetSystemTrayMenu(menu)
+	}
+
+	go func() {
+		ticker := time.NewTicker(3 * time.Hour)
+		for range ticker.C {
+			// TODO: log any potential errors
+			youtube.RefreshVideos()
+		}
+	}()
+
+	a.Run()
 }

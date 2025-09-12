@@ -216,3 +216,25 @@ func ParsePlaylists(filename string) ([]Playlist, error) {
 
 	return playlists, nil
 }
+
+func RefreshVideos() error {
+
+	subscriptions, err := ParseSubscriptions("subscriptions.yaml")
+	if err != nil {
+		return err
+	}
+	playlists, err := ParsePlaylists("playlists.yaml")
+	if err != nil {
+		return err
+	}
+	videos, err := FetchAllVideos(subscriptions, playlists)
+
+	if err != nil {
+		return err
+	}
+
+	videos.Sort()
+	videos.WriteToDB()
+
+	return nil
+}
