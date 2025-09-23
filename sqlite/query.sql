@@ -10,10 +10,16 @@ INSERT INTO videos (video_id, title, thumbnail, channel_name, description, publi
 	hours = excluded.hours,
 	minutes = excluded.minutes,
 	seconds = excluded.seconds,
-	was_live = excluded.was_live;
+	was_live = excluded.was_live,
+	is_hidden = 0;
 
 -- name: FetchVideos :many
 select *
 from videos
+where is_hidden = 0
 ;
 
+-- name: HideVideo :exec
+update videos
+set is_hidden = 1
+where video_id = ?;

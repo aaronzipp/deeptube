@@ -22,7 +22,8 @@ INSERT INTO videos (video_id, title, thumbnail, channel_name, description, publi
 	hours = excluded.hours,
 	minutes = excluded.minutes,
 	seconds = excluded.seconds,
-	was_live = excluded.was_live
+	was_live = excluded.was_live,
+	is_hidden = 0
 `
 
 type AddVideoParams struct {
@@ -55,8 +56,9 @@ func (q *Queries) AddVideo(ctx context.Context, arg AddVideoParams) error {
 }
 
 const fetchVideos = `-- name: FetchVideos :many
-select video_id, title, thumbnail, channel_name, description, published_at, hours, minutes, seconds, was_live
+select video_id, title, thumbnail, channel_name, description, published_at, hours, minutes, seconds, was_live, is_hidden
 from videos
+where is_hidden = 0
 `
 
 func (q *Queries) FetchVideos(ctx context.Context) ([]Video, error) {
@@ -79,6 +81,7 @@ func (q *Queries) FetchVideos(ctx context.Context) ([]Video, error) {
 			&i.Minutes,
 			&i.Seconds,
 			&i.WasLive,
+			&i.IsHidden,
 		); err != nil {
 			return nil, err
 		}
@@ -91,4 +94,17 @@ func (q *Queries) FetchVideos(ctx context.Context) ([]Video, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const hideVideo = `-- name: HideVideo :exec
+;
+
+update videos
+set is_hidden = 1
+where video_id = ?
+`
+
+func (q *Queries) HideVideo(ctx context.Context, videoID string) error {
+	_, err := q.db.ExecContext(ctx, hideVideo, videoID)
+	return err
 }

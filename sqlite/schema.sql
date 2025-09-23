@@ -8,6 +8,7 @@ CREATE TABLE videos (
 	hours INTEGER,
 	minutes INTEGER,
 	seconds INTEGER,
-	was_live INTEGER
+	was_live INTEGER,
+	is_hidden INTEGER
 );
 

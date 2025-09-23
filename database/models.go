@@ -19,4 +19,5 @@ type Video struct {
 	Minutes     sql.NullInt64
 	Seconds     sql.NullInt64
 	WasLive     sql.NullInt64
+	IsHidden    sql.NullInt64
 }

@@ -95,11 +95,15 @@ func launchGUI(a fyne.App) {
 			infoBox,
 		)
 
-		btn := widget.NewButtonWithIcon("", theme.MediaPlayIcon(), func() {
+		watchBtn := widget.NewButtonWithIcon("", theme.MediaPlayIcon(), func() {
 			openBrowser(vid.YouTubeLink())
 		})
 
-		videoCard := widget.NewCard("", "", container.NewBorder(nil, btn, nil, nil, card))
+		hideBtn := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
+			vid.Hide()
+		})
+
+		videoCard := widget.NewCard("", "", container.NewBorder(nil, container.NewHBox(watchBtn, hideBtn), nil, nil, card))
 		cards = append(cards, videoCard)
 	}
 

@@ -105,6 +105,24 @@ func (v Video) String() string {
 	)
 }
 
+func (v Video) Hide() error {
+	ctx := context.Background()
+	db, err := sql.Open("sqlite", "videos.db")
+
+	if err != nil {
+		return err
+	}
+
+	queries := database.New(db)
+
+	err = queries.HideVideo(ctx, v.VideoId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func VideosFromDB() (Videos, error) {
 	ctx := context.Background()
 	db, err := sql.Open("sqlite", "videos.db")
