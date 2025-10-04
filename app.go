@@ -19,7 +19,8 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-const numVideos = 60
+const numColumns = 4
+const numVideos = 20
 const logoPath = "assets/logo.png"
 
 const applicationName = "DeepTube"
@@ -51,19 +52,16 @@ func loadImage(url string) *canvas.Image {
 	return image
 }
 
-func launchGUI(a fyne.App) {
-	videos, err := video.VideosFromDB()
-	if err != nil {
-		panic(err)
+func updateGrid(grid *fyne.Container, cards []fyne.CanvasObject) {
+	if grid.Objects == nil {
+		grid.Objects = cards
+	} else {
+		grid.Objects = append(grid.Objects, cards...)
 	}
-	videos.Sort()
-	if len(videos) > numVideos {
-		videos = videos[:numVideos]
-	}
+	grid.Refresh()
+}
 
-	w := a.NewWindow(applicationName)
-	w.SetIcon(a.Icon())
-
+func generateInitialCards(grid *fyne.Container, videos video.Videos) {
 	var cards []fyne.CanvasObject
 
 	for _, vid := range videos {
@@ -95,19 +93,47 @@ func launchGUI(a fyne.App) {
 			infoBox,
 		)
 
+		var videoCard *widget.Card
+
 		watchBtn := widget.NewButtonWithIcon("", theme.MediaPlayIcon(), func() {
 			openBrowser(vid.YouTubeLink())
 		})
 
 		hideBtn := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
-			vid.Hide()
+			go func() {
+				vid.Hide()
+			}()
+			grid.Remove(videoCard)
+			grid.Refresh()
 		})
 
-		videoCard := widget.NewCard("", "", container.NewBorder(nil, container.NewHBox(watchBtn, hideBtn), nil, nil, card))
+		videoCard = widget.NewCard(
+			"",
+			"",
+			container.NewBorder(nil, container.NewHBox(watchBtn, hideBtn), nil, nil, card),
+		)
 		cards = append(cards, videoCard)
 	}
 
-	grid := container.NewGridWithColumns(4, cards...)
+	updateGrid(grid, cards)
+}
+
+func launchGUI(a fyne.App) {
+	videos, err := video.VideosFromDB()
+	if err != nil {
+		panic(err)
+	}
+	videos.Sort()
+	if len(videos) > numVideos {
+		videos = videos[:numVideos]
+	}
+
+	w := a.NewWindow(applicationName)
+	w.SetIcon(a.Icon())
+
+	grid := container.NewGridWithColumns(numColumns)
+	generateInitialCards(grid, videos)
+
 	scroll := container.NewVScroll(grid)
 
 	w.SetContent(scroll)
