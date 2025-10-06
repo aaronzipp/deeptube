@@ -11,11 +11,11 @@ import (
 )
 
 const addVideo = `-- name: AddVideo :exec
-INSERT INTO videos (video_id, title, thumbnail, channel_name, description, published_at, hours, minutes, seconds, was_live, is_hidden)
+INSERT INTO videos (video_id, title, thumbnail_url, channel_name, description, published_at, hours, minutes, seconds, was_live, is_hidden)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
     ON CONFLICT(video_id) DO UPDATE SET
 	title = excluded.title,
-	thumbnail = excluded.thumbnail,
+	thumbnail_url = excluded.thumbnail_url,
 	channel_name = excluded.channel_name,
 	description = excluded.description,
 	published_at = excluded.published_at,
@@ -26,23 +26,23 @@ INSERT INTO videos (video_id, title, thumbnail, channel_name, description, publi
 `
 
 type AddVideoParams struct {
-	VideoID     string
-	Title       sql.NullString
-	Thumbnail   sql.NullString
-	ChannelName sql.NullString
-	Description sql.NullString
-	PublishedAt sql.NullString
-	Hours       sql.NullInt64
-	Minutes     sql.NullInt64
-	Seconds     sql.NullInt64
-	WasLive     sql.NullInt64
+	VideoID      string
+	Title        sql.NullString
+	ThumbnailUrl sql.NullString
+	ChannelName  sql.NullString
+	Description  sql.NullString
+	PublishedAt  sql.NullString
+	Hours        sql.NullInt64
+	Minutes      sql.NullInt64
+	Seconds      sql.NullInt64
+	WasLive      sql.NullInt64
 }
 
 func (q *Queries) AddVideo(ctx context.Context, arg AddVideoParams) error {
 	_, err := q.db.ExecContext(ctx, addVideo,
 		arg.VideoID,
 		arg.Title,
-		arg.Thumbnail,
+		arg.ThumbnailUrl,
 		arg.ChannelName,
 		arg.Description,
 		arg.PublishedAt,
@@ -55,7 +55,7 @@ func (q *Queries) AddVideo(ctx context.Context, arg AddVideoParams) error {
 }
 
 const fetchVideos = `-- name: FetchVideos :many
-select video_id, title, thumbnail, channel_name, description, published_at, hours, minutes, seconds, was_live, is_hidden
+select video_id, title, thumbnail_url, channel_name, description, published_at, hours, minutes, seconds, was_live, is_hidden
 from videos
 where is_hidden = 0
 `
@@ -72,7 +72,7 @@ func (q *Queries) FetchVideos(ctx context.Context) ([]Video, error) {
 		if err := rows.Scan(
 			&i.VideoID,
 			&i.Title,
-			&i.Thumbnail,
+			&i.ThumbnailUrl,
 			&i.ChannelName,
 			&i.Description,
 			&i.PublishedAt,

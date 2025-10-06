@@ -1,7 +1,7 @@
 CREATE TABLE videos (
 	video_id TEXT PRIMARY KEY,
 	title TEXT,
-	thumbnail TEXT,
+	thumbnail_url TEXT,
 	channel_name TEXT,
 	description TEXT,
 	published_at TEXT,

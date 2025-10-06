@@ -9,15 +9,15 @@ import (
 )
 
 type Video struct {
-	VideoID     string
-	Title       sql.NullString
-	Thumbnail   sql.NullString
-	ChannelName sql.NullString
-	Description sql.NullString
-	PublishedAt sql.NullString
-	Hours       sql.NullInt64
-	Minutes     sql.NullInt64
-	Seconds     sql.NullInt64
-	WasLive     sql.NullInt64
-	IsHidden    sql.NullInt64
+	VideoID      string
+	Title        sql.NullString
+	ThumbnailUrl sql.NullString
+	ChannelName  sql.NullString
+	Description  sql.NullString
+	PublishedAt  sql.NullString
+	Hours        sql.NullInt64
+	Minutes      sql.NullInt64
+	Seconds      sql.NullInt64
+	WasLive      sql.NullInt64
+	IsHidden     sql.NullInt64
 }

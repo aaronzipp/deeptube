@@ -1,9 +1,9 @@
 -- name: AddVideo :exec
-INSERT INTO videos (video_id, title, thumbnail, channel_name, description, published_at, hours, minutes, seconds, was_live, is_hidden)
+INSERT INTO videos (video_id, title, thumbnail_url, channel_name, description, published_at, hours, minutes, seconds, was_live, is_hidden)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
     ON CONFLICT(video_id) DO UPDATE SET
 	title = excluded.title,
-	thumbnail = excluded.thumbnail,
+	thumbnail_url = excluded.thumbnail_url,
 	channel_name = excluded.channel_name,
 	description = excluded.description,
 	published_at = excluded.published_at,

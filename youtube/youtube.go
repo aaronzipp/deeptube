@@ -103,13 +103,13 @@ func FetchVideos(ids []string) (video.Videos, error) {
 		}
 
 		videos[i] = video.Video{
-			ChannelName: item.Snippet.ChannelTitle,
-			Title:       item.Snippet.Title,
-			VideoId:     item.Id,
-			Thumbnail:   thumbnail,
-			Description: item.Snippet.Description,
-			PublishedAt: publishedAt,
-			VideoLength: length,
+			ChannelName:  item.Snippet.ChannelTitle,
+			Title:        item.Snippet.Title,
+			VideoId:      item.Id,
+			ThumbnailUrl: thumbnail,
+			Description:  item.Snippet.Description,
+			PublishedAt:  publishedAt,
+			VideoLength:  length,
 		}
 	}
 

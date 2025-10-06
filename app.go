@@ -65,7 +65,7 @@ func generateInitialCards(grid *fyne.Container, videos video.Videos) {
 	var cards []fyne.CanvasObject
 
 	for _, vid := range videos {
-		thumbnail := loadImage(vid.Thumbnail)
+		thumbnail := loadImage(vid.ThumbnailUrl)
 
 		title := widget.NewLabelWithStyle(
 			vid.Title,

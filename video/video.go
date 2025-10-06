@@ -29,14 +29,14 @@ const hoursInMonth = hoursInDay * 30
 const hoursInYear = hoursInDay * 365
 
 type Video struct {
-	Title       string
-	VideoId     string
-	ChannelName string
-	Description string
-	PublishedAt time.Time
-	VideoLength Length
-	Thumbnail   string
-	WasLive     bool
+	Title        string
+	VideoId      string
+	ChannelName  string
+	Description  string
+	PublishedAt  time.Time
+	VideoLength  Length
+	ThumbnailUrl string
+	WasLive      bool
 }
 type Videos []Video
 
@@ -152,9 +152,9 @@ func VideosFromDB() (Videos, error) {
 				Minutes: int(vid.Minutes.Int64),
 				Seconds: int(vid.Seconds.Int64),
 			},
-			PublishedAt: publishedTime,
-			Thumbnail:   vid.Thumbnail.String,
-			WasLive:     vid.WasLive.Int64 == 1,
+			PublishedAt:  publishedTime,
+			ThumbnailUrl: vid.ThumbnailUrl.String,
+			WasLive:      vid.WasLive.Int64 == 1,
 		}
 	}
 
@@ -178,11 +178,11 @@ func (v Videos) WriteToDB() error {
 
 	for _, vid := range v {
 		err := queries.AddVideo(ctx, database.AddVideoParams{
-			VideoID:     vid.VideoId,
-			Title:       sql.NullString{String: vid.Title, Valid: true},
-			Thumbnail:   sql.NullString{String: vid.Thumbnail, Valid: true},
-			ChannelName: sql.NullString{String: vid.ChannelName, Valid: true},
-			Description: sql.NullString{String: vid.Description, Valid: true},
+			VideoID:      vid.VideoId,
+			Title:        sql.NullString{String: vid.Title, Valid: true},
+			ThumbnailUrl: sql.NullString{String: vid.ThumbnailUrl, Valid: true},
+			ChannelName:  sql.NullString{String: vid.ChannelName, Valid: true},
+			Description:  sql.NullString{String: vid.Description, Valid: true},
 			PublishedAt: sql.NullString{
 				String: vid.PublishedAt.Format("2006-01-02 15:04:05"),
 				Valid:  true,
