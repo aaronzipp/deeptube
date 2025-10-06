@@ -12,3 +12,9 @@ CREATE TABLE videos (
 	is_hidden INTEGER
 );
 
+CREATE TABLE thumbnails (
+	video_id TEXT PRIMARY KEY,
+	thumbnail BLOB,
+	updated_at TEXT,
+	FOREIGN KEY(video_id) REFERENCES videos(video_id) ON DELETE CASCADE
+);

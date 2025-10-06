@@ -22,3 +22,10 @@ where is_hidden = 0
 update videos
 set is_hidden = 1
 where video_id = ?;
+
+-- AddThumbnail :exec
+INSERT INTO thumbnails(video_id, image, updated_at)
+VALUES (?, ?, CURRENT_TIMESTAMP)
+ON CONFLICT(video_id) DO UPDATE SET
+    image = excluded.image,
+    updated_at = CURRENT_TIMESTAMP;

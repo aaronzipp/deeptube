@@ -8,6 +8,12 @@ import (
 	"database/sql"
 )
 
+type Thumbnail struct {
+	VideoID   string
+	Thumbnail []byte
+	UpdatedAt sql.NullString
+}
+
 type Video struct {
 	VideoID      string
 	Title        sql.NullString
