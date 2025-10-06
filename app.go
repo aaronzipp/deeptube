@@ -117,13 +117,9 @@ func generateInitialCards(grid *fyne.Container, videos video.Videos) {
 }
 
 func launchGUI(a fyne.App) {
-	videos, err := video.VideosFromDB()
+	videos, err := video.VideosFromDB(numVideos)
 	if err != nil {
 		panic(err)
-	}
-	videos.Sort()
-	if len(videos) > numVideos {
-		videos = videos[:numVideos]
 	}
 
 	w := a.NewWindow(applicationName)

@@ -169,7 +169,7 @@ func (v Video) Hide() error {
 	return nil
 }
 
-func VideosFromDB() (Videos, error) {
+func VideosFromDB(limit int) (Videos, error) {
 	ctx := context.Background()
 	db, err := sql.Open("sqlite", "videos.db")
 
@@ -179,7 +179,7 @@ func VideosFromDB() (Videos, error) {
 
 	queries := database.New(db)
 
-	dbVideos, err := queries.FetchVideos(ctx)
+	dbVideos, err := queries.FetchVideos(ctx, database.FetchVideosParams{Limit: int64(limit)})
 
 	if err != nil {
 		return nil, err

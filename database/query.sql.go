@@ -87,10 +87,16 @@ const fetchVideos = `-- name: FetchVideos :many
 select video_id, title, thumbnail_url, channel_name, description, published_at, hours, minutes, seconds, was_live, is_hidden
 from videos
 where is_hidden = 0
+order by published_at desc
+limit ?
 `
 
-func (q *Queries) FetchVideos(ctx context.Context) ([]Video, error) {
-	rows, err := q.db.QueryContext(ctx, fetchVideos)
+type FetchVideosParams struct {
+	Limit int64
+}
+
+func (q *Queries) FetchVideos(ctx context.Context, arg FetchVideosParams) ([]Video, error) {
+	rows, err := q.db.QueryContext(ctx, fetchVideos, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +132,6 @@ func (q *Queries) FetchVideos(ctx context.Context) ([]Video, error) {
 
 const hideVideo = `-- name: HideVideo :exec
 ;
-
 update videos
 set is_hidden = 1
 where video_id = ?
