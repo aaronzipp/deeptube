@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
+	"net/http"
 	"sort"
 	"time"
 
@@ -28,6 +30,49 @@ const hoursInDay = 24
 const hoursInMonth = hoursInDay * 30
 const hoursInYear = hoursInDay * 365
 
+// DownloadThumbnail downloads a thumbnail if it doesn't exist in DB and saves it
+func DownloadThumbnail(videoID, thumbnailURL string) error {
+	if thumbnailURL == "" {
+		return nil
+	}
+
+	ctx := context.Background()
+	db, err := sql.Open("sqlite", "videos.db")
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	queries := database.New(db)
+
+	// Check if thumbnail already exists
+	_, err = queries.FetchThumbnail(ctx, videoID)
+	if err == nil {
+		return nil
+	}
+
+	resp, err := http.Get(thumbnailURL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to download thumbnail: %s", resp.Status)
+	}
+
+	thumbnailData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	err = queries.AddThumbnail(ctx, database.AddThumbnailParams{
+		VideoID:   videoID,
+		Thumbnail: thumbnailData,
+	})
+	return err
+}
+
 type Video struct {
 	Title        string
 	VideoId      string
@@ -36,6 +81,7 @@ type Video struct {
 	PublishedAt  time.Time
 	VideoLength  Length
 	ThumbnailUrl string
+	Thumbnail    []byte
 	WasLive      bool
 }
 type Videos []Video
@@ -142,6 +188,13 @@ func VideosFromDB() (Videos, error) {
 	vids := make(Videos, len(dbVideos))
 	for i, vid := range dbVideos {
 		publishedTime, _ := time.Parse("2006-01-02 15:04:05", vid.PublishedAt.String)
+
+		thumbnailData, err := queries.FetchThumbnail(ctx, vid.VideoID)
+		if err != nil {
+			_ = DownloadThumbnail(vid.VideoID, vid.ThumbnailUrl.String)
+			thumbnailData, _ = queries.FetchThumbnail(ctx, vid.VideoID)
+		}
+
 		vids[i] = Video{
 			Title:       vid.Title.String,
 			VideoId:     vid.VideoID,
@@ -154,6 +207,7 @@ func VideosFromDB() (Videos, error) {
 			},
 			PublishedAt:  publishedTime,
 			ThumbnailUrl: vid.ThumbnailUrl.String,
+			Thumbnail:    thumbnailData,
 			WasLive:      vid.WasLive.Int64 == 1,
 		}
 	}

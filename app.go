@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bytes"
 	"image"
-	"net/http"
 	"os/exec"
 	"runtime"
 	"time"
@@ -36,13 +36,11 @@ func openBrowser(url string) {
 	}
 }
 
-func loadImage(url string) *canvas.Image {
-	resp, err := http.Get(url)
-	if err != nil {
+func loadImage(data []byte) *canvas.Image {
+	if len(data) == 0 {
 		return canvas.NewImageFromFile(logoPath)
 	}
-	defer resp.Body.Close()
-	img, _, err := image.Decode(resp.Body)
+	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
 		return canvas.NewImageFromFile(logoPath)
 	}
@@ -65,7 +63,7 @@ func generateInitialCards(grid *fyne.Container, videos video.Videos) {
 	var cards []fyne.CanvasObject
 
 	for _, vid := range videos {
-		thumbnail := loadImage(vid.ThumbnailUrl)
+		thumbnail := loadImage(vid.Thumbnail)
 
 		title := widget.NewLabelWithStyle(
 			vid.Title,

@@ -111,6 +111,10 @@ func FetchVideos(ids []string) (video.Videos, error) {
 			PublishedAt:  publishedAt,
 			VideoLength:  length,
 		}
+
+		if thumbnail != "" {
+			_ = video.DownloadThumbnail(item.Id, thumbnail)
+		}
 	}
 
 	return videos, nil

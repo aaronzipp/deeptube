@@ -10,6 +10,24 @@ import (
 	"database/sql"
 )
 
+const addThumbnail = `-- name: AddThumbnail :exec
+INSERT INTO thumbnails(video_id, thumbnail, updated_at)
+VALUES (?, ?, CURRENT_TIMESTAMP)
+ON CONFLICT(video_id) DO UPDATE SET
+    thumbnail = excluded.thumbnail,
+    updated_at = CURRENT_TIMESTAMP
+`
+
+type AddThumbnailParams struct {
+	VideoID   string
+	Thumbnail []byte
+}
+
+func (q *Queries) AddThumbnail(ctx context.Context, arg AddThumbnailParams) error {
+	_, err := q.db.ExecContext(ctx, addThumbnail, arg.VideoID, arg.Thumbnail)
+	return err
+}
+
 const addVideo = `-- name: AddVideo :exec
 INSERT INTO videos (video_id, title, thumbnail_url, channel_name, description, published_at, hours, minutes, seconds, was_live, is_hidden)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
@@ -52,6 +70,17 @@ func (q *Queries) AddVideo(ctx context.Context, arg AddVideoParams) error {
 		arg.WasLive,
 	)
 	return err
+}
+
+const fetchThumbnail = `-- name: FetchThumbnail :one
+SELECT thumbnail FROM thumbnails WHERE video_id = ?
+`
+
+func (q *Queries) FetchThumbnail(ctx context.Context, videoID string) ([]byte, error) {
+	row := q.db.QueryRowContext(ctx, fetchThumbnail, videoID)
+	var thumbnail []byte
+	err := row.Scan(&thumbnail)
+	return thumbnail, err
 }
 
 const fetchVideos = `-- name: FetchVideos :many
