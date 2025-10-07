@@ -161,7 +161,7 @@ func main() {
 	}
 
 	go func() {
-		ticker := time.NewTicker(3 * time.Hour)
+		ticker := time.NewTicker(30 * time.Minute)
 		for range ticker.C {
 			// TODO: log any potential errors
 			youtube.RefreshVideos()
