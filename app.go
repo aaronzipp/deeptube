@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"image"
+	"image/color"
 	"os/exec"
 	"runtime"
 	"time"
@@ -72,26 +73,43 @@ func generateInitialCards(grid *fyne.Container, videos video.Videos) {
 		)
 		title.Wrapping = fyne.TextWrapWord
 
-		channel := widget.NewLabel(vid.ChannelName)
-		duration := vid.VideoLength.String()
+		channel := widget.NewLabelWithStyle(
+			vid.ChannelName,
+			fyne.TextAlignLeading,
+			fyne.TextStyle{Italic: true},
+		)
+		channel.Wrapping = fyne.TextWrapWord
+
+		durationText := canvas.NewText(
+			vid.VideoLength.String(),
+			theme.Color(theme.ColorNameForeground),
+		)
+		liveText := canvas.NewText("", theme.Color(theme.ColorNameForeground))
 		if vid.WasLive {
-			duration += " LIVE"
+			liveText.Text = " LIVE"
+			liveText.Color = color.RGBA{255, 0, 0, 255}
+			liveText.TextStyle = fyne.TextStyle{Bold: true}
 		}
-		durationLabel := widget.NewLabel(duration)
-		published := widget.NewLabel(vid.TimeSincePublished())
+		dotText := canvas.NewText(" • ", theme.Color(theme.ColorNameForeground))
+		publishedText := canvas.NewText(
+			vid.TimeSincePublished(),
+			theme.Color(theme.ColorNameForeground),
+		)
+		publishedText.TextStyle = fyne.TextStyle{Italic: true}
+
+		bottomLine := container.NewHBox(durationText, liveText, dotText, publishedText)
 
 		infoBox := container.NewVBox(
 			title,
 			channel,
-			container.NewHBox(durationLabel, widget.NewLabel(" • "), published),
+			bottomLine,
 		)
 
 		card := container.NewVBox(
 			thumbnail,
 			infoBox,
 		)
-
-		var videoCard *widget.Card
+		var videoCard *fyne.Container
 
 		watchBtn := widget.NewButtonWithIcon("", theme.MediaPlayIcon(), func() {
 			openBrowser(vid.YouTubeLink())
@@ -105,11 +123,9 @@ func generateInitialCards(grid *fyne.Container, videos video.Videos) {
 			grid.Refresh()
 		})
 
-		videoCard = widget.NewCard(
-			"",
-			"",
-			container.NewBorder(nil, container.NewHBox(watchBtn, hideBtn), nil, nil, card),
-		)
+		buttons := container.NewHBox(watchBtn, hideBtn)
+		content := container.NewBorder(nil, buttons, nil, nil, card)
+		videoCard = container.NewPadded(content)
 		cards = append(cards, videoCard)
 	}
 
